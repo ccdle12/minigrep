@@ -1,7 +1,8 @@
 use std::env;
-use std::error::Error;
-use std::fs;
 use std::process;
+
+use minigrep;
+use minigrep::Config;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -16,37 +17,8 @@ fn main() {
 
     // We are using this way to catch the error as opposed to unwrap_or_else because run does not
     // return any values besides an error.
-    if let Err(e) = run(config) {
+    if let Err(e) = minigrep::run(config) {
         println!("Application error: {}", e);
         process::exit(1)
-    }
-}
-
-fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let contents = fs::read_to_string(config.filename)?;
-
-    println!("Read contents: {}", contents);
-    Ok(())
-}
-
-struct Config {
-    query: String,
-    filename: String,
-}
-
-impl Config {
-    // 'static is a lifetime that lives the whole duration of a program. Useful for error messages
-    // but should be used carefully.
-    fn new(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("not enough arguments");
-        }
-
-        // Make a deep copy of the string in the vector.
-        // Clone is very inefficient.
-        let query = args[1].clone();
-        let filename = args[2].clone();
-
-        Ok(Config { query, filename })
     }
 }

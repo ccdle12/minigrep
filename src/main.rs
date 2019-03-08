@@ -1,4 +1,5 @@
 use std::env;
+use std::error::Error;
 use std::fs;
 use std::process;
 
@@ -13,10 +14,19 @@ fn main() {
     println!("Searching for {}", config.query);
     println!("In File {}", config.filename);
 
-    let contents =
-        fs::read_to_string(config.filename).expect("Something went wrong when reading the file");
+    // We are using this way to catch the error as opposed to unwrap_or_else because run does not
+    // return any values besides an error.
+    if let Err(e) = run(config) {
+        println!("Application error: {}", e);
+        process::exit(1)
+    }
+}
+
+fn run(config: Config) -> Result<(), Box<dyn Error>> {
+    let contents = fs::read_to_string(config.filename)?;
 
     println!("Read contents: {}", contents);
+    Ok(())
 }
 
 struct Config {

@@ -1,9 +1,11 @@
+use std::env;
 use std::error::Error;
 use std::fs;
 
 pub struct Config {
     pub query: String,
     pub filename: String,
+    pub case_sensitive: bool,
 }
 
 impl Config {
@@ -19,15 +21,29 @@ impl Config {
         let query = args[1].clone();
         let filename = args[2].clone();
 
-        Ok(Config { query, filename })
+        // is_err() will check if the env variable is set or not, if its not set it will default to
+        // false and a normal search will be run.
+        let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
+
+        Ok(Config {
+            query,
+            filename,
+            case_sensitive,
+        })
     }
 }
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(config.filename)?;
 
-    for line in search(&config.query, &contents) {
-        println!("{}", line);
+    let results = if config.case_sensitive {
+        search(&config.query, &contents)
+    } else {
+        search_case_insensitive(&config.query, &contents)
+    };
+
+    for line in results {
+        println!("{}", line)
     }
 
     Ok(())
@@ -45,8 +61,8 @@ fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     results
 }
 
-// case_insensitive_search will search a query and normalize both the contents and the query.
-fn case_insensitive_search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+// search_case_insensitive will search a query and normalize both the contents and the query.
+fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     let mut results = Vec::new();
     let query = query.to_lowercase();
 
@@ -86,7 +102,7 @@ Trust me.";
 
         assert_eq!(
             vec!["Rust:", "Trust me."],
-            case_insensitive_search(query, contents)
+            search_case_insensitive(query, contents)
         )
     }
 }

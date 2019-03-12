@@ -11,15 +11,25 @@ pub struct Config {
 impl Config {
     // 'static is a lifetime that lives the whole duration of a program. Useful for error messages
     // but should be used carefully.
-    pub fn new(args: &[String]) -> Result<Config, &'static str> {
+    // Updating the new param to std::env::Args, this will take ownership of an iterator.
+    pub fn new(mut args: std::env::Args) -> Result<Config, &'static str> {
         if args.len() < 3 {
             return Err("not enough arguments");
         }
 
         // Make a deep copy of the string in the vector.
         // Clone is very inefficient.
-        let query = args[1].clone();
-        let filename = args[2].clone();
+        // REPLACING the deep copy with iterator next() calls.
+        // let query = args[1].clone();
+        // let filename = args[2].clone();
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a query string"),
+        };
+        let filename = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a filename string"),
+        };
 
         // is_err() will check if the env variable is set or not, if its not set it will default to
         // false and a normal search will be run.

@@ -61,14 +61,11 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
 // The lifetime of the return value will be the same lifetime as the contents str.
 fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    let mut results = Vec::new();
-    for line in contents.lines() {
-        if line.contains(query) {
-            results.push(line);
-        }
-    }
-
-    results
+    // Refactoring to use iterators.
+    contents
+        .lines()
+        .filter(|line| line.contains(query))
+        .collect()
 }
 
 // search_case_insensitive will search a query and normalize both the contents and the query.
